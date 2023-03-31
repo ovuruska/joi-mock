@@ -1,11 +1,6 @@
-import { AnySchema, ArraySchema, NumberSchema, ObjectSchema } from 'joi';
-import { faker } from '@faker-js/faker';
-import {
-    MAX_LENGTH,
-    MAX_NUMBER,
-    MIN_LENGTH,
-    MIN_NUMBER,
-} from '@src/generateSchema.constants';
+import {AnySchema, ArraySchema, NumberSchema, ObjectSchema} from 'joi';
+import {faker} from '@faker-js/faker';
+import {MAX_LENGTH, MAX_NUMBER, MIN_LENGTH, MIN_NUMBER,} from '@src/generateSchema.constants';
 
 export const generateRandomNumber = ({
                                          min,
@@ -13,7 +8,7 @@ export const generateRandomNumber = ({
                                      }: {
     min?: number;
     max?: number;
-}) => faker.datatype.number({ min: min || MIN_NUMBER, max: max || MAX_NUMBER });
+}) => faker.datatype.number({min: min || MIN_NUMBER, max: max || MAX_NUMBER});
 
 function getMaxConstraint(schema: AnySchema): number | null {
     const max = schema['_rules'].filter((rule) => rule.name === 'max');
@@ -33,12 +28,12 @@ function getMinConstraint(schema: AnySchema): number | null {
 
 // Optional input
 export const getLength = (lengthOptions?: { min?: number; max?: number }) => {
-    const { min = MIN_LENGTH, max = MAX_LENGTH } = lengthOptions || {};
-    return faker.datatype.number({ min, max });
+    const {min = MIN_LENGTH, max = MAX_LENGTH} = lengthOptions || {};
+    return faker.datatype.number({min, max});
 };
 
 export const generateRandomString = (schema: AnySchema) => {
-    if(schema['_valids'] && schema['_valids']['_values']){
+    if (schema['_valids'] && schema['_valids']['_values']) {
         // Select random value from valids
         const validValues = Array.from(schema['_valids']['_values']);
         return faker.helpers.arrayElement(validValues);
@@ -58,7 +53,7 @@ export const generatePrimitive = (schema: AnySchema) => {
         return generateRandomString(schema);
     } else if (schema.type === 'boolean') {
         return faker.datatype.boolean();
-    }else{
+    } else {
         return null;
     }
 };
@@ -74,48 +69,68 @@ export const generateSchema = (schema: AnySchema) => {
         const objectSchema = schema as ObjectSchema;
         const retValue = {};
         objectSchema['_ids']['_byKey'].forEach((value, key) => {
-            const { presence } = value.schema['_flags'];
-            if(presence === 'forbidden'){
+            const {presence} = value.schema['_flags'];
+            if (presence === 'forbidden') {
                 return;
             }
-            if (presence === 'required' ) {
-                if(value.schema['$_terms'] && !!value.schema['$_terms'].whens) {
+            if (presence === 'required') {
+                if (value.schema['$_terms'] && !!value.schema['$_terms'].whens) {
                     const {whens} = value.schema['$_terms'];
                     const result = generateSchema(whens.then);
                     const {error} = value.schema.validate(result);
                     if (!error) {
                         retValue[key] = result;
-                    }else{
-                        if(whens.otherwise) {
+                    } else {
+                        if (whens.otherwise) {
                             retValue[key] = generateSchema(whens.otherwise);
                         }
                     }
-                }
-                else{
+                } else {
 
                     retValue[key] = generateSchema(value.schema);
                 }
-            }else if(presence === 'optional' && faker.datatype.boolean()){
+            } else if (presence === 'optional' && faker.datatype.boolean()) {
                 retValue[key] = generateSchema(value.schema);
             }
         });
         return retValue;
     } else if (schema.type === 'array') {
         const arraySchema = schema as ArraySchema;
-        const length = getLength({
-            min: arraySchema._flags.min,
-            max: arraySchema._flags.max,
-        });
-        const retArray = new Set();
-        const { items } = arraySchema['$_terms'];
-        if (items.length === 0) {
+        const rules = arraySchema['_rules'];
+
+        const isUnique = !!rules.filter((rule) => rule.name === 'unique');
+
+        if (isUnique) {
+            const retArray = new Set();
+            const length = getLength({
+                min: arraySchema._flags.min,
+                max: arraySchema._flags.max,
+            });
+            const {items} = arraySchema['$_terms'];
+            if (items.length === 0) {
+                return Array.from(retArray);
+            }
+            for (let i = 0; i < length; i++) {
+                retArray.add(generateSchema(items[i % items.length]));
+            }
             return Array.from(retArray);
+        } else {
+            const retArray = [];
+            const length = getLength({
+                min: arraySchema._flags.min,
+                max: arraySchema._flags.max,
+            });
+            const {items} = arraySchema['$_terms'];
+            if (items.length === 0) {
+                return retArray;
+            }
+            for (let i = 0; i < length; i++) {
+                retArray.push(generateSchema(items[i % items.length]));
+            }
+            return retArray;
         }
-        for (let i = 0; i < length; i++) {
-            retArray.add(generateSchema(items[i % items.length]));
-        }
-        return Array.from(retArray);
-    }else{
+
+    } else {
         return null;
 
     }
