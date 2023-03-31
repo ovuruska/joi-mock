@@ -173,4 +173,42 @@ describe('Generate schema', () => {
         testSchema(schema);
     });
 
+    it('should generate unique array of strings.',() => {
+        const schema = Joi.array().items(Joi.string()).unique();
+        testSchema(schema);
+    });
+
+    it('should generate unique array of numbers.',() => {
+        const schema = Joi.array().items(Joi.number()).unique();
+        testSchema(schema);
+    });
+
+    it('should generate unique array of booleans.',() => {
+        const schema = Joi.array().items(Joi.boolean()).unique();
+        testSchema(schema);
+    });
+
+
+    it('should generate conditional fields ',() => {
+       const  schema = Joi.object({
+           john: Joi.string().allow(null),
+           john1: Joi.when('john', {
+               is: Joi.exist().not(null),
+               then: Joi.string().allow(null),
+               otherwise: Joi.forbidden(),
+           }),
+           john2: Joi.when('john1', {
+               is: Joi.exist().not(null),
+               then: Joi.string().allow(null),
+               otherwise: Joi.forbidden(),
+           }),
+           john3: Joi.when('john2', {
+               is: Joi.exist().not(null),
+               then: Joi.string().allow(null),
+               otherwise: Joi.forbidden(),
+           }),
+       });
+        testSchema(schema);
+    });
+
 });

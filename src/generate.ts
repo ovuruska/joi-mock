@@ -5,7 +5,7 @@ import {
     MAX_NUMBER,
     MIN_LENGTH,
     MIN_NUMBER,
-} from '@src/joi-mock.constants';
+} from '@src/generateSchema.constants';
 
 export const generateRandomNumber = ({
                                          min,
@@ -75,7 +75,27 @@ export const generateSchema = (schema: AnySchema) => {
         const retValue = {};
         objectSchema['_ids']['_byKey'].forEach((value, key) => {
             const { presence } = value.schema['_flags'];
-            if (presence === 'required' || faker.datatype.boolean()) {
+            if(presence === 'forbidden'){
+                return;
+            }
+            if (presence === 'required' ) {
+                if(value.schema['$_terms'] && !!value.schema['$_terms'].whens) {
+                    const {whens} = value.schema['$_terms'];
+                    const result = generateSchema(whens.then);
+                    const {error} = value.schema.validate(result);
+                    if (!error) {
+                        retValue[key] = result;
+                    }else{
+                        if(whens.otherwise) {
+                            retValue[key] = generateSchema(whens.otherwise);
+                        }
+                    }
+                }
+                else{
+
+                    retValue[key] = generateSchema(value.schema);
+                }
+            }else if(presence === 'optional' && faker.datatype.boolean()){
                 retValue[key] = generateSchema(value.schema);
             }
         });
@@ -86,15 +106,15 @@ export const generateSchema = (schema: AnySchema) => {
             min: arraySchema._flags.min,
             max: arraySchema._flags.max,
         });
-        const retArray = [];
+        const retArray = new Set();
         const { items } = arraySchema['$_terms'];
         if (items.length === 0) {
-            return retArray;
+            return Array.from(retArray);
         }
         for (let i = 0; i < length; i++) {
-            retArray.push(generateSchema(items[i % items.length]));
+            retArray.add(generateSchema(items[i % items.length]));
         }
-        return retArray;
+        return Array.from(retArray);
     }else{
         return null;
 

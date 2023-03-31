@@ -1,9 +1,10 @@
 import {AnySchema} from "joi";
-import {generate} from '@src/generate';
+import {generateSchema} from '@src/generate';
 
 export const testSchema = (schema: AnySchema) => {
     for (let i = 0; i < 20; i++) {
-        const {error} = schema.validate(generate(schema));
+        const value = generateSchema(schema);
+        const {error} = schema.validate(value);
         expect(error).toBeUndefined();
     }
 }
