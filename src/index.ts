@@ -1,0 +1,1 @@
+export {JoiMock} from '@src/joi-mock';

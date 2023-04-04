@@ -1,6 +1,6 @@
 import {AnySchema, ArraySchema, NumberSchema, ObjectSchema} from 'joi';
 import {faker} from '@faker-js/faker';
-import {MAX_LENGTH, MAX_NUMBER, MIN_LENGTH, MIN_NUMBER,} from '@src/generateSchema.constants';
+import {MAX_LENGTH, MAX_NUMBER, MIN_LENGTH, MIN_NUMBER} from "@src/joi-mock.constants";
 
 export const generateRandomNumber = ({
                                          min,

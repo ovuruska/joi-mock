@@ -1,7 +1,7 @@
 {
   "name": "joi-mock",
   "version": "1.0.0",
-  "description": "",
+  "description": "🌟 joi-mock - Effortlessly generate mock data based on your Joi schemas 🌟\n\n",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
@@ -11,8 +11,12 @@
     "test:cov": "jest --coverage --maxWorkers=20% --maxConcurrent=2 --no-cache",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "typescript",
+    "joi",
+    "mock"
+  ],
+  "author": "Oğuz Vuruşkaner",
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^29.5.0",
